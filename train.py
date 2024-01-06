@@ -10,8 +10,9 @@ from sklearn.metrics import accuracy_score
 print(tf.version.VERSION)
 
 #EPOCHS = 2
-EPOCHS = 100
-BATCH_SIZE = 32
+EPOCHS = 50
+#BATCH_SIZE = 32
+BATCH_SIZE = 1
 
 #checkpoint_path = "training_dropout/cp-{epoch:04d}.ckpt"
 checkpoint_path = "training/cp-{epoch:04d}.ckpt"
@@ -55,6 +56,7 @@ model = tf.keras.Sequential([
 ])
 """
 
+"""
 model = tf.keras.Sequential([
     tf.keras.layers.Flatten(input_shape=(28, 28)),
     tf.keras.layers.Dropout(0.25),
@@ -64,6 +66,12 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Dense(128, activation='relu'),
     tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+"""
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=(28, 28)),
+    tf.keras.layers.Dense(100, activation='relu'),
     tf.keras.layers.Dense(10, activation='softmax')
 ])
 
@@ -114,12 +122,12 @@ accuracy = history.history['accuracy']
 # Create a pandas DataFrame
 df = pd.DataFrame({'accuracy': accuracy})
 
-# Plot the accuracy
-plt.plot(df['accuracy'])
-#plt.plot(df['train_accuracy'])
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.title('Training and Validation Accuracy of Fashion-MNIST FCN Model')
+plt.legend()
 #plt.show()
 # Save the plot as an image file
 plt.savefig('training_accuracy.png')
