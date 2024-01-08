@@ -3,22 +3,17 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
 from sklearn.metrics import accuracy_score
 import csv 
 
 print(tf.version.VERSION)
 
-#EPOCH = 50
 BATCH_SIZE = 32
 
-#checkpoint_path = "training_dropout/cp-{epoch:04d}.ckpt"
 checkpoint_path = "training/cp-{epoch:04d}.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 model_name = 'fashion_mnist_.h5'
-
 
 cp_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path, 
@@ -52,14 +47,6 @@ def train_model(EPOCH, hidden_num, data_argu):
     """
     model = tf.keras.Sequential([
         tf.keras.layers.Flatten(input_shape=(28, 28)),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dense(10, activation='softmax')
-    ])
-    """
-
-    """
-    model = tf.keras.Sequential([
-        tf.keras.layers.Flatten(input_shape=(28, 28)),
         tf.keras.layers.Dropout(0.25),
         tf.keras.layers.Dense(512, activation='relu'),
         tf.keras.layers.Dropout(0.5),
@@ -90,10 +77,16 @@ def train_model(EPOCH, hidden_num, data_argu):
 
     # Train the model
     # Preprocess the data
+    print("data_argu:", data_argu)
+    x_train = x_train / 255.0
+    x_test = x_test / 255.0
+    history = model.fit(x_train, y_train, epochs=EPOCH, validation_data=(x_test, y_test), callbacks=[cp_callback])
+
+    """
     if (data_argu==False):
+        print("data_argu:", data_argu)
         x_train = x_train / 255.0
         x_test = x_test / 255.0
-        #history = model.fit(x_train, y_train, epochs=EPOCH, validation_data=(x_test, y_test), callbacks=[cp_callback], learning_rate=0.001)
         history = model.fit(x_train, y_train, epochs=EPOCH, validation_data=(x_test, y_test), callbacks=[cp_callback])
     else:
         # Apply data augmentation during training
@@ -104,32 +97,21 @@ def train_model(EPOCH, hidden_num, data_argu):
 
         validation_datagen = ImageDataGenerator(rescale=1./255)
         validation_generator = validation_datagen.flow(x_test, y_test, batch_size=BATCH_SIZE)
-
-        #history = model.fit(train_generator, epochs=EPOCH, validation_data=(x_test, y_test), callbacks=[cp_callback])
         history = model.fit(train_generator, epochs=EPOCH, validation_data=validation_generator, callbacks=[cp_callback])
+    """
 
     model.save(model_name)
 
-    acc = [0.] + history.history['accuracy']
-    val_acc = [0.] + history.history['val_accuracy']
-
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
+    train_acc = accuracy[-1]
+    print("train res:", accuracy[-1])
 
     # Evaluate the model
     res = model.evaluate(x_test, y_test)
     test_acc = res[-1]
     print("evaluate res:", res[-1])
 
-
     # Extract the accuracy from the model's history
     accuracy = history.history['accuracy']
-
-    train_acc = accuracy[-1]
-    print("train res:", accuracy[-1])
-
-    # Create a pandas DataFrame
-    df = pd.DataFrame({'accuracy': accuracy})
 
     plt.plot(history.history['accuracy'], label='Training Accuracy')
     plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
@@ -137,23 +119,20 @@ def train_model(EPOCH, hidden_num, data_argu):
     plt.ylabel('Accuracy')
     plt.title('Training and Validation Accuracy of Fashion-MNIST FCN Model')
     plt.legend()
-    #plt.show()
     # Save the plot as an image file
     plt.savefig('training_accuracy.png')
 
     return train_acc, test_acc
 
 
-EPOCHS = [50]
-#hidden_nums = [100, 256, 512]
-#hidden_nums = [100, 256]
-hidden_nums = [100]
-data_argus = [False, True]
+EPOCHS = [50, 100]
+hidden_nums = [100, 256, 512]
+#data_argus = [False, True]
+data_argus = [False]
 
 current_dir = "./"
-writeFile = open('{}/stats.csv'.format(current_dir), 'a')
+writeFile = open('{}/stats.csv'.format(current_dir), 'w')
 writer = csv.writer(writeFile)
-#writer.writerow(['Epoch', 'Train Loss', 'Train Accuracy', 'Validation Loss', 'Validation Accuracy'])
 writer.writerow(['Epoch', 'hidden num', 'Data Argu', 'train Acc', 'test Acc'])
 
 # for param
